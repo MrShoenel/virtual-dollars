@@ -1,0 +1,8 @@
+# Generated:
+report.Rmd
+
+output/*
+!output/.gitkeep
+
+.RData
+.Rhistory

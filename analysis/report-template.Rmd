@@ -1,0 +1,89 @@
+---
+title: "Analysis of __DATAFILE__"
+output:
+  md_document:
+    df_print: paged
+  html_document:
+    df_print: paged
+    number_sections: true
+    toc: true
+    toc_depth: 6
+    toc_float: true
+  pdf_document:
+    number_sections: true
+    toc: true
+    toc_depth: 6
+  word_document: default
+---
+
+This is the report for the file `__DATAFILE__`.
+
+```{r}
+data <- read.csv(file = "__DATAFILE__")
+```
+
+# Data Overview
+
+The data consists of `r nrow(data)` records. There are `r length(levels(data$Member))` members. There are `r length(unique(data$Week))` weeks. A total of `r sum(data$Amount)` virtual currency was spent. A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed.
+
+## Members
+
+The members are: `r levels(data$Member)`.
+
+
+# Dollars Received
+
+## Per User and Week
+
+Here, we show show how much money was received per user and week.
+
+```{r}
+ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
+  geom_bar(position="stack", stat="identity") +
+  geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
+  facet_wrap(Week ~.) + coord_flip() +
+  #scale_fill_brewer(palette = "Set3") +
+  theme_light() +
+  theme(axis.title.y = element_blank())
+```
+
+## Per User, total
+
+```{r}
+ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
+  stat_summary(aes(x=Member, y=Amount), fun.y = sum, geom = "bar") +
+  geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
+  coord_flip() +
+  #scale_fill_brewer(palette = "Set3") +
+  theme_light() +
+  theme(axis.title.y = element_blank())
+```
+
+# Per User, cumulative sum
+
+```{r}
+wr <- range(data$Week)
+cSums <- data.frame(stringsAsFactors = FALSE)
+for (member in levels(data$Member)) {
+  temp <- data.frame(stringsAsFactors = FALSE)
+  for (week in (wr[1]:wr[2])) {
+    cSum <- data[data$Member == member & data$Week == week, ]
+    temp <- rbind(temp, data.frame(
+      Member = member,
+      Week = week,
+      Amount = sum(cSum$Amount)
+    ))
+  }
+  temp$AmountCsum <- cumsum(temp$Amount)
+  cSums <- rbind(cSums, temp)
+}
+
+ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member)) +
+  geom_line() + geom_point(size = 2) +
+  geom_smooth(method = "lm") + 
+  theme_light() +
+  ylab("Cumulative Sum") +
+  #scale_color_brewer(palette = "Set3") +
+  facet_wrap(Member ~., nrow = 3)
+```
+
