@@ -1,4 +1,4 @@
-# Virtual Dollars
+# Virtual Dollars  -  [![Build Status](https://github.com/MrShoenel/virtual-dollars/workflows/Node.js%20CI/badge.svg?branch=master)](https://github.com/MrShoenel/virtual-dollars/actions?query=workflow%3A%22Node.js+CI%22)
 
 This application can read, aggregate and create graphical reports of individual reports of virtual currency (Euros or Dollars). Supports Weeks, Groups and fuzzy name matching.
 
