@@ -5,12 +5,12 @@ This application can read, aggregate and create graphical reports of individual 
 ## Installation
 Use these instructions to clone and install the application.
 
-<code>
+<pre>
 git clone https://github.com/MrShoenel/virtual-dollars.git
 cd virtual-dollars
 npm install
 npm test
-</code>
+</pre>
 
 
 ## Generate aggregated reports
