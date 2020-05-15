@@ -31,6 +31,7 @@
     "csv-writer": "^1.6.0",
     "jaro-winkler": "^0.2.8",
     "js-levenshtein": "^1.1.6",
+    "sh.log-client": "^2.10.4",
     "sh.orchestration-tools": "^2.26.0"
   }
 }
