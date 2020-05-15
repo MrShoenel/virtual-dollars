@@ -49,7 +49,7 @@ Here, we show show how much money was received per user and week.
 ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   geom_bar(position="stack", stat="identity") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
-  facet_wrap(Week ~.) + coord_flip() +
+  facet_wrap(Week ~., ncol = 3) + coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
   theme(
@@ -59,6 +59,8 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
     strip.text = element_text(color="black")) +
   scale_fill_discrete(guide = guide_legend(nrow = 4))
 ```
+
+\pagebreak
 
 ## Per User, total
 
@@ -72,9 +74,11 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
   theme(axis.title.y = element_blank())
 ```
 
+\pagebreak
+
 # Per User, cumulative sum
 
-```{r fig.height=8}
+```{r fig.height=6}
 cSums <- data.frame(stringsAsFactors = FALSE)
 for (member in levels(data$Member)) {
   temp <- data.frame(stringsAsFactors = FALSE)
@@ -96,7 +100,7 @@ ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
   geom_smooth(method = "lm") + 
   theme_light() +
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     strip.background = element_rect(fill="#dfdfdf"),
     strip.text = element_text(color="black")) +
   ylab("Cumulative Sum") +
