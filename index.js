@@ -51,7 +51,7 @@ const logger = new ColoredConsoleLogger('Program')
 });
 
 logger.logLevel = parseInt(program.logLevel, 10);
-logger.logInfo(`Similarities are measured using ${sim.__proto__.constructor.name}`);
+logger.logInfo(`Similarities are measured using ${program.nameMatcher}`);
 logger.logInfo(`Writing to file: ${program.outFile}`);
 
 if (program.useNames) {
@@ -63,7 +63,7 @@ if (program.useNames) {
         program.dir, program.week, program.group))
 }
 
-logger.logDebug(`The NameMapper uses these authoritative names: ${nm.names.join(', ')}`);
+logger.logDebug(`The NameMapper uses a minimum similarity of ${program.similarity} and these ${nm.names.length} authoritative names: ${nm.names.join(', ')}`);
 
 
 
