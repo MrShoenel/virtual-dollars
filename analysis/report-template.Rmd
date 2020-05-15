@@ -1,6 +1,11 @@
 ---
 title: "Analysis of __DATAFILE__"
 output:
+  pdf_document:
+    number_sections: true
+    toc: true
+    toc_depth: 6
+  word_document: default
   md_document:
     df_print: paged
   html_document:
@@ -9,11 +14,6 @@ output:
     toc: true
     toc_depth: 6
     toc_float: true
-  pdf_document:
-    number_sections: true
-    toc: true
-    toc_depth: 6
-  word_document: default
 ---
 
 This is the report for the file `__DATAFILE__`.
@@ -45,14 +45,19 @@ The members are: `r levels(data$Member)`.
 
 Here, we show show how much money was received per user and week.
 
-```{r}
+```{r fig.height=8}
 ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   geom_bar(position="stack", stat="identity") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
   facet_wrap(Week ~.) + coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
-  theme(axis.title.y = element_blank())
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "bottom",
+    strip.background = element_rect(fill="#dfdfdf"),
+    strip.text = element_text(color="black")) +
+  scale_fill_discrete(guide = guide_legend(nrow = 4))
 ```
 
 ## Per User, total
@@ -69,7 +74,7 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
 
 # Per User, cumulative sum
 
-```{r}
+```{r fig.height=8}
 cSums <- data.frame(stringsAsFactors = FALSE)
 for (member in levels(data$Member)) {
   temp <- data.frame(stringsAsFactors = FALSE)
@@ -90,7 +95,12 @@ ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
   geom_line() + geom_point(size = 2) +
   geom_smooth(method = "lm") + 
   theme_light() +
+  theme(
+    legend.position = "bottom",
+    strip.background = element_rect(fill="#dfdfdf"),
+    strip.text = element_text(color="black")) +
   ylab("Cumulative Sum") +
+  scale_fill_discrete(guide = guide_legend(nrow = 4)) +
   #scale_color_brewer(palette = "Set3") +
   facet_wrap(Member ~., ncol = 3, scales = "fixed")
 ```
