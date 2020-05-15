@@ -12,6 +12,21 @@ npm install
 npm test
 </pre>
 
+## Testing Reports
+There is an extra feature for testing your report:
+
+<pre>
+node .\test-report.js -f .\test\data\CourseWeek15GroupBlueByMargeSimpson.txt
+
+Your Report is Valid!
+[Program]: The name of the reporter is: Marge Simpson
+[Program]: The Report is a Scrum Master Report: true
+[Program]: The week and group are: 15, Blue
+[Program]: ----------
+[Program]: The following records are contained:
+[Program]: [Amount: 6, Scrums missed: 4, Other Missed: 5, is Scrum Master: true, is self-report: false, for: Homer Simpson]
+</pre>
+
 
 ## Generate aggregated reports
 The application assumes you have a folder with weekly reports, and each file's name follows the schema `CourseWeek15GroupBlueByHomerSimpson.txt` (not case sensitive; however, the name at the end is split by upper-case letters, if it were all lowercase, then it's just seen as one name, which is no problem, if all files use the same schema).

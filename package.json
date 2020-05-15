@@ -1,6 +1,6 @@
 {
   "name": "virtual-dollars",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A project to read virtual Dollars (or Euros) from text files.",
   "main": "index.js",
   "scripts": {
@@ -11,10 +11,8 @@
     "url": "git+https://github.com/MrShoenel/virtual-dollars.git"
   },
   "keywords": [
-    "Virtual",
-    "Dollars",
-    "Virtual",
-    "Euros"
+    "Virtual Dollars",
+    "Virtual Euros"
   ],
   "author": "Sebastian Hönel <sebastian.honel@lnu.se>",
   "license": "GPL-3.0-or-later",
