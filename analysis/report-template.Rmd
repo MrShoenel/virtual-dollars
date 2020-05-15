@@ -21,6 +21,14 @@ This is the report for the file `__DATAFILE__`.
 ```{r}
 data <- read.csv(file = "__DATAFILE__")
 ```
+```{r}
+data$Week <- factor(
+  x = as.character(data$Week),
+  levels = as.character(sort(unique(data$Week))),
+  ordered = TRUE
+)
+```
+
 
 # Data Overview
 
@@ -62,11 +70,10 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
 # Per User, cumulative sum
 
 ```{r}
-wr <- range(data$Week)
 cSums <- data.frame(stringsAsFactors = FALSE)
 for (member in levels(data$Member)) {
   temp <- data.frame(stringsAsFactors = FALSE)
-  for (week in (wr[1]:wr[2])) {
+  for (week in levels(data$Week)) {
     cSum <- data[data$Member == member & data$Week == week, ]
     temp <- rbind(temp, data.frame(
       Member = member,
@@ -78,12 +85,13 @@ for (member in levels(data$Member)) {
   cSums <- rbind(cSums, temp)
 }
 
-ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member)) +
+ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
+  scale_x_discrete() +
   geom_line() + geom_point(size = 2) +
   geom_smooth(method = "lm") + 
   theme_light() +
   ylab("Cumulative Sum") +
   #scale_color_brewer(palette = "Set3") +
-  facet_wrap(Member ~., nrow = 3)
+  facet_wrap(Member ~., ncol = 3, scales = "fixed")
 ```
 
