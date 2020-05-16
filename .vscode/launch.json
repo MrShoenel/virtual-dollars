@@ -7,6 +7,19 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Test-File",
+            "program": "${workspaceFolder}/test-report.js",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": [
+                "-s", "0.6",
+                "-f", "./test/data/Brown/1DV508Week16GroupBrownByNellieMustonen.txt"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Mocha Tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
@@ -34,7 +47,7 @@
                 "-d", "./test/data/blue",
                 "-w", "16",
                 "-g", "Blue",
-                "-o", "test.csv"
+                "-o", "Blue.csv"
             ]
         }
     ]
