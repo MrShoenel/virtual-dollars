@@ -6,6 +6,7 @@ if (length(args) == 0) {
 }
 
 dataFile <- gsub("\\\\", "/", base::normalizePath(args[1], mustWork = TRUE))
+noExt <- tools::file_path_sans_ext(base::basename(args[1]))
 
 print(paste0("Using file: ", dataFile))
 
@@ -16,11 +17,11 @@ rmd <- paste(
   collapse = "\n")
 rmd <- gsub("__DATAFILE__", dataFile, rmd)
 
-rmdReport <- normalizePath("./report.Rmd", mustWork = FALSE)
+rmdReport <- normalizePath(paste0("./report_", noExt, ".Rmd"), mustWork = FALSE)
 base::writeLines(rmd, file(rmdReport))
 
 
-requiredPackages <- c("rmarkdown", "ggplot2")
+requiredPackages <- c("rmarkdown", "ggplot2", "dplyr")
 for (rp in requiredPackages) {
   if (!(rp %in% rownames(installed.packages()))) {
     install.packages(rp)
@@ -31,4 +32,6 @@ for (rp in requiredPackages) {
 }
 
 
-rmarkdown::render(rmdReport, output_dir = normalizePath("./output"), output_format = "all")
+rmarkdown::render(rmdReport, output_dir = normalizePath("./output"), output_format = "all", output_file = rep(noExt, 4))
+
+base::unlink(rmdReport)

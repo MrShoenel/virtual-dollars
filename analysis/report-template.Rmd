@@ -32,7 +32,11 @@ data$Week <- factor(
 
 # Data Overview
 
-The data consists of `r nrow(data)` records. There are `r length(levels(data$Member))` members. There are `r length(unique(data$Week))` weeks. A total of `r sum(data$Amount)` virtual currency was spent. A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed.
+The data consists of `r nrow(data)` records. There are `r length(levels(data$Member))` members. There are `r length(unique(data$Week))` weeks.
+
+A total of `r sum(data$Amount)` virtual currency (`r round(sum(data$Amount) / length(levels(data$Member)))` on average) was spent.
+
+A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed.
 
 ## Members
 
@@ -40,15 +44,19 @@ The members are: `r levels(data$Member)`.
 
 
 # Dollars Received
+In the following plots, the vertical line represents the mean.
 
 ## Per User and Week
 
 Here, we show show how much money was received per user and week.
 
-```{r fig.height=8}
+```{r fig.height=7}
+meanAmounts <- data %>% group_by(Week) %>% summarize(mean_val = sum(Amount) / length(levels(data$Member)))
+
 ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   geom_bar(position="stack", stat="identity") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
+  geom_hline(data=meanAmounts, aes(yintercept = mean_val)) +
   facet_wrap(Week ~., ncol = 3) + coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
@@ -65,13 +73,16 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
 ## Per User, total
 
 ```{r}
+averageReceived <- sum(data$Amount) / length(levels(data$Member))
+
 ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
   stat_summary(aes(x=Member, y=Amount), fun.y = sum, geom = "bar") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
   coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
-  theme(axis.title.y = element_blank())
+  theme(axis.title.y = element_blank()) +
+  geom_hline(yintercept = averageReceived)
 ```
 
 \pagebreak
