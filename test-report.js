@@ -21,7 +21,7 @@ program
 
 
 try {
-    const cnm = new CollectingNameMapper(jw, program.similarity)
+    const cnm = new CollectingNameMapper(jw, parseFloat(program.similarity))
     , p = resolve(program.file);
 
     if (!existsSync(p)) {
@@ -39,6 +39,21 @@ try {
     report.records.forEach(rc => {
         logger.logDebug(rc);
     });
+
+    logger.logInfo(`----------`);
+    logger.logInfo('The authoritative names are:');
+    logger.logDebug(cnm.authoritativeNames.join(', '));
+
+    logger.logInfo(`----------`);
+    if (cnm.mappedNames.isEmpty) {
+        logger.logInfo(`<no names were mapped, i.e., only using ${cnm.authoritativeNames.length} authoritative names>`);
+    } else {
+        const inv = nm.mappedNames.invert();
+        logger.logInfo(`The ${inv.size} name-mappings are:`);
+        for (const entry of inv.entries()) {
+            logger.logDebug(`${entry[0].name} -> ${entry[1].join(', ')}`);
+        }
+    }
 } catch (e) {
     logger.logError(`Your report is not valid, the following errors occured:\n----------\n${formatError(e)}`);
     process.exit(-1);

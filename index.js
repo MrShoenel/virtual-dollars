@@ -77,6 +77,25 @@ try {
 
 
 
+
+    
+logger.logInfo(`----------`);
+logger.logInfo('The authoritative names are:');
+logger.logDebug(nm.authoritativeNames.join(', '));
+
+logger.logInfo(`----------`);
+if (nm.mappedNames.isEmpty) {
+    logger.logInfo(`<no names were mapped, i.e., only using ${nm.authoritativeNames.length} authoritative names>`);
+} else {
+    const inv = nm.mappedNames.invert();
+    logger.logInfo(`The ${inv.size} name-mappings are:`);
+    for (const entry of inv.entries()) {
+        logger.logDebug(`${entry[0].name} -> ${entry[1].join(', ')}`);
+    }
+}
+
+
+
 const timeout = setTimeout(() => {}, 2**30);
 (async() => {
     try {
@@ -94,7 +113,7 @@ const timeout = setTimeout(() => {}, 2**30);
 
             await csvW.writeRecords(records);
 
-            logger.logDebug(`Wrote ${records.length} Records of Report by ${report.author} (week: ${report.week}, group: ${report.group})`);
+            logger.logTrace(`Wrote ${records.length} Records of Report by ${report.author} (week: ${report.week}, group: ${report.group})`);
         }
     } finally {
         clearTimeout(timeout);
