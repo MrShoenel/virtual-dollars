@@ -187,35 +187,20 @@ ggplot(data = dollars, aes(x = reorder(Member, score), y = score, color = reorde
   labs(fill = "Member", color = "Member")
 ```
 
-Also, let's factor in the amount of missed meetings.
+Also, let's factor in the amount of missed meetings. However, these we'll compute differently. With every additionally missed meeting, the score should decrease exponentially. We calculate the score therefore as `1.1**(-n*1.4**n)`, where `n` is the number of missed meetings.
 
 ```{r}
 allScores <- inner_join(dollars, data %>% group_by(Member) %>% summarize(S_missed = sum(ScrumsMissed), O_missed = sum(OtherMissed)), by = c("Member"))
 
-scoreSMissed <- ecdf(allScores$S_missed)
-scoreOMissed <- ecdf(allScores$O_missed)
-
-# Here, a higher value is worse, so we need to calculate 1-ecdf:
-allScores$S_missedScore <- sapply(allScores$S_missed, function(x) {
-  if (x == 0) return(1)
-  return(1 - scoreSMissed(x))
-})
-allScores$O_missedScore <- sapply(allScores$O_missed, function(x) {
-  if (x == 0) return(1)
-  return(1 - scoreOMissed(x))
-})
+allScores$S_missedScore <- sapply(allScores$S_missed, function(x) 1.1**(-x*1.4**x))
+allScores$O_missedScore <- sapply(allScores$O_missed, function(x) 1.1**(-x*1.4**x))
+allScores$scoreMiss <- allScores$S_missedScore * allScores$O_missedScore
 ```
 
-```{r}
-weightMissedMeetings <- 0.5
-```
-
-We compute the total score by factoring in the amount of missed meetings with a weight, because these are absences with given notice. That weight is `r round(weightMissedMeetings, 3)`.
+The scores for absences already carry some weight, so that we can just multiply them with the dollar-scores.
 
 ```{r}
-allScores$scoreMiss <- (allScores$S_missedScore + allScores$O_missedScore) / 2
-
-allScores$total <- (allScores$score + weightMissedMeetings * allScores$scoreMiss) / (1 + weightMissedMeetings)
+allScores$total <- allScores$score * allScores$scoreMiss
 ```
 
 In the following graph, we keep the same order of members as in the previous graph, to highlight differences due to missed meetings.
