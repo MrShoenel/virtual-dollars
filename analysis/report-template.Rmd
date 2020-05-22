@@ -119,9 +119,8 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
   geom_hline(yintercept = averageReceived)
 ```
 
-\pagebreak
 
-# Per User, cumulative sum
+## Per User, cumulative sum
 
 ```{r fig.height=6}
 cSums <- data.frame(stringsAsFactors = FALSE)
@@ -153,4 +152,105 @@ ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
   #scale_color_brewer(palette = "Set3") +
   facet_wrap(Member ~., ncol = 3, scales = "fixed")
 ```
+
+
+# Scoring
+
+We compute various scores in the range `[0,1]` based on dollars and absences. These scores are then broken down into quantiles
+
+```{r}
+dollars <- amountWeek %>% group_by(Member) %>% summarize(min = min(AmountSum), max = max(AmountSum), avg = mean(AmountSum), sum = sum(AmountSum))
+
+# For dollars, a higher value is better. The score represents thus the
+# cumulative probability to find something lower.
+scoreDollarMin = ecdf(dollars$min)
+dollars$minScore <- sapply(dollars$min, scoreDollarMin)
+scoreDollarMax = ecdf(dollars$max)
+dollars$maxScore <- sapply(dollars$max, scoreDollarMax)
+scoreDollarAvg = ecdf(dollars$avg)
+dollars$avgScore <- sapply(dollars$avg, scoreDollarAvg)
+scoreDollarSum = ecdf(dollars$sum)
+dollars$sumScore <- sapply(dollars$sum, scoreDollarSum)
+
+# For the total score, we just add them together.
+dollars$score <- (dollars$minScore + dollars$maxScore + dollars$avgScore + dollars$sumScore) / 4
+```
+
+
+```{r}
+ggplot(data = dollars, aes(x = reorder(Member, score), y = score, color = reorder(Member, -score), fill = reorder(Member, -score))) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.title.y = element_blank()) +
+  ggtitle("Averaged scores [0,1], dollar distribution") +
+  labs(fill = "Member", color = "Member")
+```
+
+Also, let's factor in the amount of missed meetings.
+
+```{r}
+allScores <- inner_join(dollars, data %>% group_by(Member) %>% summarize(S_missed = sum(ScrumsMissed), O_missed = sum(OtherMissed)), by = c("Member"))
+
+scoreSMissed <- ecdf(allScores$S_missed)
+scoreOMissed <- ecdf(allScores$O_missed)
+
+# Here, a higher value is worse, so we need to calculate 1-ecdf:
+allScores$S_missedScore <- sapply(allScores$S_missed, function(x) {
+  if (x == 0) return(1)
+  return(1 - scoreSMissed(x))
+})
+allScores$O_missedScore <- sapply(allScores$O_missed, function(x) {
+  if (x == 0) return(1)
+  return(1 - scoreOMissed(x))
+})
+```
+
+```{r}
+weightMissedMeetings <- 0.5
+```
+
+We compute the total score by factoring in the amount of missed meetings with a weight, because these are absences with given notice. That weight is `r round(weightMissedMeetings, 3)`.
+
+```{r}
+allScores$scoreMiss <- (allScores$S_missedScore + allScores$O_missedScore) / 2
+
+allScores$total <- (allScores$score + weightMissedMeetings * allScores$scoreMiss) / (1 + weightMissedMeetings)
+```
+
+In the following graph, we keep the same order of members as in the previous graph, to highlight differences due to missed meetings.
+
+```{r}
+ggplot(data = allScores, aes(x = reorder(Member, score), y = total, color = reorder(Member, -score), fill = reorder(Member, -score))) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.title.y = element_blank()) +
+  ggtitle("Averaged scores [0,1], total (incl. absences)") +
+  labs(fill = "Member", color = "Member")
+```
+
+## Final Ranking
+
+There is one grade for the entire group, and each member should get a grade equal to it. According to what we presented here, each member may also receive a grade worse or better than the group. We therefore introduce 3 ranges (not quantiles, as these would split the group into 3 equally large subgroups) of the score.
+
+```{r}
+scoreStep <- (range(allScores$total)[2] - range(allScores$total)[1]) / 3
+scoreRange <- c(
+  min(allScores$total) + scoreStep,
+  min(allScores$total) + scoreStep * 2
+)
+
+membersQ1 <- allScores %>% filter(total <= scoreRange[1])
+membersQ2 <- allScores %>% filter(total > scoreRange[1] & total <= scoreRange[2])
+membersQ3 <- allScores %>% filter(total > scoreRange[2])
+```
+
+The score-ranges are `x` <= `r scoreRange[1]`, `r scoreRange[1]` < `x` <= `r scoreRange[2]`, and `x` > `r scoreRange[2]`.
+
+The `r nrow(membersQ1)` member(s) that should receive a grade __worse__ than their group are: `r paste(membersQ1$Member, collapse = ", ")`.
+
+The `r nrow(membersQ2)` member(s) that should receive a grade __equal to__ their group are: `r paste(membersQ2$Member, collapse = ", ")`.
+
+The `r nrow(membersQ3)` member(s) that should receive a grade __better__ than their group are: `r paste(membersQ3$Member, collapse = ", ")`.
 
