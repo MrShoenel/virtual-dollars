@@ -21,7 +21,10 @@ This is the report for the file `__DATAFILE__`.
 ```{r}
 data <- read.csv(file = "__DATAFILE__")
 ```
-```{r}
+```{r warning=FALSE}
+library(dplyr)
+library(ggplot2)
+
 data$Week <- factor(
   x = as.character(data$Week),
   levels = as.character(sort(unique(data$Week))),
@@ -38,6 +41,11 @@ A total of `r sum(data$Amount)` virtual currency (`r round(sum(data$Amount) / le
 
 A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed.
 
+```{r}
+data %>% group_by(Member) %>% summarize(S_missed = sum(ScrumsMissed), O_missed = sum(OtherMissed))
+```
+
+
 ## Members
 
 The members are: `r levels(data$Member)`.
@@ -53,11 +61,17 @@ Here, we show show how much money was received per user and week.
 ```{r fig.height=7}
 meanAmounts <- data %>% group_by(Week) %>% summarize(mean_val = sum(Amount) / length(levels(data$Member)))
 
+print(meanAmounts)
+```
+
+
+```{r fig.height=7}
 ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   geom_bar(position="stack", stat="identity") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
   geom_hline(data=meanAmounts, aes(yintercept = mean_val)) +
-  facet_wrap(Week ~., ncol = 3) + coord_flip() +
+  facet_wrap(Week ~., ncol = 3) +
+  coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
   theme(
@@ -68,7 +82,27 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   scale_fill_discrete(guide = guide_legend(nrow = 4))
 ```
 
-\pagebreak
+Another version, but this time we show all weeks per user:
+
+```{r fig.height=7}
+amountWeek <- data %>% group_by(Member,Week) %>% summarize(AmountSum=sum(Amount))
+rangeAmountWeek <- range(amountWeek$AmountSum)
+
+ggplot(amountWeek, aes(fill = Week, y=AmountSum, x=Week)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(Member ~., ncol = 3, scales = "free_y") +
+  #coord_flip() +
+  #scale_fill_brewer(palette = "Set3") +
+  theme_light() +
+  theme(
+    legend.position = "bottom",
+    strip.background = element_rect(fill="#dfdfdf"),
+    strip.text = element_text(color="black")) +
+  coord_cartesian(ylim = c(rangeAmountWeek[1] - 1, rangeAmountWeek[2] + 1))
+
+```
+
+
 
 ## Per User, total
 
