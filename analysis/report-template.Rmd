@@ -18,8 +18,8 @@ output:
 
 This is the report for the file `__DATAFILE__`.
 
-```{r}
-data <- read.csv(file = "__DATAFILE__")
+```{r warning=FALSE}
+data <- read.csv(file = "__DATAFILE__", encoding = "UTF-8")
 ```
 ```{r warning=FALSE}
 library(dplyr)
@@ -77,9 +77,10 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   theme(
     axis.title.y = element_blank(),
     legend.position = "bottom",
+    legend.title = element_blank(),
     strip.background = element_rect(fill="#dfdfdf"),
     strip.text = element_text(color="black")) +
-  scale_fill_discrete(guide = guide_legend(nrow = 4))
+  scale_fill_discrete(guide = guide_legend(nrow = 5))
 ```
 
 Another version, but this time we show all weeks per user:
@@ -108,15 +109,23 @@ ggplot(amountWeek, aes(fill = Week, y=AmountSum, x=Week)) +
 
 ```{r}
 averageReceived <- sum(data$Amount) / length(levels(data$Member))
+```
 
+The average received per user is `r round(averageReceived, 2)`.
+
+```{r}
 ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
   stat_summary(aes(x=Member, y=Amount), fun.y = sum, geom = "bar") +
   geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
   coord_flip() +
   #scale_fill_brewer(palette = "Set3") +
   theme_light() +
-  theme(axis.title.y = element_blank()) +
-  geom_hline(yintercept = averageReceived)
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "bottom",
+    legend.title = element_blank()) +
+  geom_hline(yintercept = averageReceived) +
+  scale_fill_discrete(guide = guide_legend(nrow = 5))
 ```
 
 
@@ -182,7 +191,11 @@ ggplot(data = dollars, aes(x = reorder(Member, score), y = score, color = reorde
   geom_bar(stat = "identity") +
   coord_flip() +
   theme_light() +
-  theme(axis.title.y = element_blank()) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    legend.position = "bottom") +
+  scale_fill_discrete(guide = guide_legend(nrow = 5)) +
   ggtitle("Averaged scores [0,1], dollar distribution") +
   labs(fill = "Member", color = "Member")
 ```
@@ -210,7 +223,11 @@ ggplot(data = allScores, aes(x = reorder(Member, score), y = total, color = reor
   geom_bar(stat = "identity") +
   coord_flip() +
   theme_light() +
-  theme(axis.title.y = element_blank()) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    legend.position = "bottom") +
+  scale_fill_discrete(guide = guide_legend(nrow = 5)) +
   ggtitle("Averaged scores [0,1], total (incl. absences)") +
   labs(fill = "Member", color = "Member")
 ```
