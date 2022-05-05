@@ -14,7 +14,7 @@
             ],
             "args": [
                 "-s", "0.6",
-                "-f", "./test/data/Brown/1DV508Week16GroupBrownByNellieMustonen.txt"
+                "-f", "./test/data/CourseWeek15GroupBlueByHomerSimpson.txt"
             ]
         },
         {
@@ -44,10 +44,10 @@
             ],
             "program": "${workspaceFolder}\\index.js",
             "args": [
-                "-d", "./test/data/blue",
+                "-d", "./test/data/red",
                 "-w", "16",
-                "-g", "Blue",
-                "-o", "Blue.csv"
+                "-g", "Red",
+                "-o", "Red.csv"
             ]
         }
     ]
