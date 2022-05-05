@@ -8,7 +8,7 @@ if (length(args) == 0) {
 dataFile <- gsub("\\\\", "/", base::normalizePath(args[1], mustWork = TRUE))
 noExt <- tools::file_path_sans_ext(base::basename(args[1]))
 
-print(paste0("Using file: ", dataFile))
+print(paste0("Generating report for file: ", dataFile))
 
 
 rmd <- paste(
@@ -32,7 +32,7 @@ for (rp in requiredPackages) {
 }
 
 
-renderFormats = c("pdf_document", "word_document", "md_document", "html_document")
+renderFormats = c("bookdown::pdf_document2", "word_document", "md_document", "html_document")
 
 cl <- parallel::makeCluster(length(renderFormats))
 doSNOW::registerDoSNOW(cl)
