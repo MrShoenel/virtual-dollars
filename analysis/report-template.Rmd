@@ -1,48 +1,72 @@
 ---
 title: "Analysis of __DATAFILE__"
+author: "Sebastian Hönel"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+papersize: a4
+urlcolor: blue
 output:
-  pdf_document:
-    number_sections: true
-    toc: true
+  bookdown::pdf_document2:
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
     toc_depth: 6
-  word_document: default
+    df_print: kable
+    keep_tex: yes
   md_document:
-    df_print: paged
-  html_document:
-    df_print: paged
-    number_sections: true
-    toc: true
+    toc: yes
     toc_depth: 6
-    toc_float: true
+    df_print: kable
+    variant: gfm
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+    df_print: kable
+  word_document: default
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+Sys.setenv(LC_ALL = "en_US.UTF-8")
+Sys.setenv(LANG = "en_US.UTF-8")
+```
 
 This is the report for the file `__DATAFILE__`.
 
 ```{r warning=FALSE}
 data <- read.csv(file = "__DATAFILE__", encoding = "UTF-8")
-```
-```{r warning=FALSE}
-library(dplyr)
-library(ggplot2)
+
+data$Member <- factor(
+  x = data$Member,
+  levels =sort(unique(data$Member)),
+  ordered = TRUE)
 
 data$Week <- factor(
   x = as.character(data$Week),
   levels = as.character(sort(unique(data$Week))),
-  ordered = TRUE
-)
+  ordered = TRUE)
+```
+```{r warning=FALSE, message=FALSE, include=FALSE}
+library(dplyr)
+library(ggplot2)
 ```
 
 
 # Data Overview
 
 The data consists of `r nrow(data)` records. There are `r length(levels(data$Member))` members. There are `r length(unique(data$Week))` weeks.
-
 A total of `r sum(data$Amount)` virtual currency (`r round(sum(data$Amount) / length(levels(data$Member)))` on average) was spent.
+A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed (table \ref{tab:members}).
 
-A total of `r sum(data$ScrumsMissed)` scrums and `r sum(data$OtherMissed)` other meetings were missed.
-
-```{r}
-data %>% group_by(Member) %>% summarize(S_missed = sum(ScrumsMissed), O_missed = sum(OtherMissed))
+```{r echo=FALSE}
+knitr::kable(
+  x = data %>% group_by(Member) %>% summarize("Scrums missed" = sum(ScrumsMissed), "Other meetings missed" = sum(OtherMissed)),
+  booktabs = TRUE,
+  caption = "All members and the number of Scrums or other meetings missed.",
+  label = "members"
+)
 ```
 
 
@@ -56,23 +80,30 @@ In the following plots, the vertical line represents the mean.
 
 ## Per User and Week
 
-Here, we show show how much money was received per user and week.
+Here, we show show how much money was received per user and week (table \ref{tab:average-dollars} and figure \ref{fig:dollars-per-week}).
 
-```{r fig.height=7}
-meanAmounts <- data %>% group_by(Week) %>% summarize(mean_val = sum(Amount) / length(levels(data$Member)))
-
-print(meanAmounts)
+```{r}
+meanAmounts <- data %>% group_by(Week) %>% summarize("Average Dollars" = round(sum(Amount) / length(levels(data$Member)), 2))
 ```
 
 
-```{r fig.height=7}
+```{r echo=FALSE}
+knitr::kable(
+  x = meanAmounts,
+  booktabs = TRUE,
+  caption = "Average amount of dollars spent/received per week and member.",
+  label = "average-dollars"
+)
+```
+
+
+```{r dollars-per-week, echo=FALSE, fig.cap="Dollars received per week and user, grouped by week.", fig.height=max(length(levels(data$Member)) * 0.75, 5)}
 ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
   geom_bar(position="stack", stat="identity") +
-  geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
-  geom_hline(data=meanAmounts, aes(yintercept = mean_val)) +
+  stat_summary(aes(label = ..y.., group = Member), fun=sum, geom="text", size = 3, hjust = 1.5) +
+  geom_hline(data=meanAmounts, aes(yintercept = `Average Dollars`)) +
   facet_wrap(Week ~., ncol = 3) +
   coord_flip() +
-  #scale_fill_brewer(palette = "Set3") +
   theme_light() +
   theme(
     axis.title.y = element_blank(),
@@ -80,12 +111,12 @@ ggplot(data, aes(fill=Member, y=Amount, x=Member)) +
     legend.title = element_blank(),
     strip.background = element_rect(fill="#dfdfdf"),
     strip.text = element_text(color="black")) +
-  scale_fill_discrete(guide = guide_legend(nrow = 5))
+  scale_fill_discrete(guide = guide_legend(nrow = 4))
 ```
 
-Another version, but this time we show all weeks per user:
+Another version, but this time we show all weeks per user (figure \ref{fig:dollars-per-user}):
 
-```{r fig.height=7}
+```{r dollars-per-user, echo=FALSE, fig.cap="Dollars received per week and user, grouped by user.", fig.height=max(length(levels(data$Member)) * 0.6, 4)}
 amountWeek <- data %>% group_by(Member,Week) %>% summarize(AmountSum=sum(Amount))
 rangeAmountWeek <- range(amountWeek$AmountSum)
 
@@ -99,7 +130,8 @@ ggplot(amountWeek, aes(fill = Week, y=AmountSum, x=Week)) +
     legend.position = "bottom",
     strip.background = element_rect(fill="#dfdfdf"),
     strip.text = element_text(color="black")) +
-  coord_cartesian(ylim = c(rangeAmountWeek[1] - 1, rangeAmountWeek[2] + 1))
+  coord_cartesian(ylim = c(rangeAmountWeek[1] - 1, rangeAmountWeek[2] + 1)) +
+  scale_fill_discrete(guide = guide_legend(nrow = 1))
 
 ```
 
@@ -107,31 +139,35 @@ ggplot(amountWeek, aes(fill = Week, y=AmountSum, x=Week)) +
 
 ## Per User, total
 
+Figure \ref{fig:dollars-total-per-user} shows the total amount of dollars received, per user.
+Also, we show the average
+
 ```{r}
 averageReceived <- sum(data$Amount) / length(levels(data$Member))
 ```
 
-The average received per user is `r round(averageReceived, 2)`.
+The average received per user is `r round(averageReceived, 2)`, and the median is `r round(median((data %>% group_by(Member) %>% summarize(bla = sum(Amount)))$bla))`.
 
-```{r}
+```{r dollars-total-per-user, echo=FALSE, fig.cap="Dollars received total per user."}
 ggplot(data, aes(fill=Member, y=Amount, x=Member, label=Amount)) +
-  stat_summary(aes(x=Member, y=Amount), fun.y = sum, geom = "bar") +
-  geom_text(aes(label = stat(y), group = Member), stat = 'summary', fun.y = sum, hjust = 1.5) +
+  stat_summary(aes(x=Member, y=Amount), fun = sum, geom = "bar") +
+  stat_summary(aes(label = ..y.., group = Member), fun=sum, geom="text", size = 5, hjust = 1.5) +
   coord_flip() +
-  #scale_fill_brewer(palette = "Set3") +
   theme_light() +
   theme(
     axis.title.y = element_blank(),
     legend.position = "bottom",
     legend.title = element_blank()) +
   geom_hline(yintercept = averageReceived) +
-  scale_fill_discrete(guide = guide_legend(nrow = 5))
+  scale_fill_discrete(guide = guide_legend(nrow = 4))
 ```
 
 
 ## Per User, cumulative sum
 
-```{r fig.height=6}
+Figure \ref{fig:dollars-cumulative} shows the cumulative dollars received per user and week.
+
+```{r}
 cSums <- data.frame(stringsAsFactors = FALSE)
 for (member in levels(data$Member)) {
   temp <- data.frame(stringsAsFactors = FALSE)
@@ -146,11 +182,14 @@ for (member in levels(data$Member)) {
   temp$AmountCsum <- cumsum(temp$Amount)
   cSums <- rbind(cSums, temp)
 }
+```
 
+
+```{r dollars-cumulative, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Cumulative dollars (per week) received per user.", fig.height=max(length(levels(data$Member)) * 0.6, 4)}
 ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
   scale_x_discrete() +
   geom_line() + geom_point(size = 2) +
-  geom_smooth(method = "lm") + 
+  geom_smooth(method = "lm", formula = y ~ x) + 
   theme_light() +
   theme(
     legend.position = "none",
@@ -165,7 +204,8 @@ ggplot(cSums, aes(x=Week, y=AmountCsum, color=Member, group = 1)) +
 
 # Scoring
 
-We compute various scores in the range `[0,1]` based on dollars and absences. These scores are then broken down into quantiles
+We compute various scores in the range `[0,1]` based on dollars and absences. These scores are then broken down into quantiles.
+Figure \ref{fig:scores} shows the calculated scores per user.
 
 ```{r}
 dollars <- amountWeek %>% group_by(Member) %>% summarize(min = min(AmountSum), max = max(AmountSum), avg = mean(AmountSum), sum = sum(AmountSum))
@@ -186,7 +226,7 @@ dollars$score <- (dollars$minScore + dollars$maxScore + dollars$avgScore + dolla
 ```
 
 
-```{r}
+```{r scores, echo=FALSE, fig.cap="Averaged scores [0,1], dollar distribution."}
 ggplot(data = dollars, aes(x = reorder(Member, score), y = score, color = reorder(Member, -score), fill = reorder(Member, -score))) +
   geom_bar(stat = "identity") +
   coord_flip() +
@@ -195,8 +235,7 @@ ggplot(data = dollars, aes(x = reorder(Member, score), y = score, color = reorde
     axis.title.y = element_blank(),
     legend.title = element_blank(),
     legend.position = "bottom") +
-  scale_fill_discrete(guide = guide_legend(nrow = 5)) +
-  ggtitle("Averaged scores [0,1], dollar distribution") +
+  scale_fill_discrete(guide = guide_legend(nrow = 4)) +
   labs(fill = "Member", color = "Member")
 ```
 
@@ -216,9 +255,9 @@ The scores for absences already carry some weight, so that we can just multiply 
 allScores$total <- allScores$score * allScores$scoreMiss
 ```
 
-In the following graph, we keep the same order of members as in the previous graph, to highlight differences due to missed meetings.
+In the following graph of figure \ref{fig:scores-incl-absences}, we keep the same order of members as in the previous graph, to highlight differences due to missed meetings.
 
-```{r}
+```{r scores-incl-absences, echo=FALSE, fig.cap="Averaged scores [0,1], total (incl. absences)."}
 ggplot(data = allScores, aes(x = reorder(Member, score), y = total, color = reorder(Member, -score), fill = reorder(Member, -score))) +
   geom_bar(stat = "identity") +
   coord_flip() +
@@ -227,8 +266,7 @@ ggplot(data = allScores, aes(x = reorder(Member, score), y = total, color = reor
     axis.title.y = element_blank(),
     legend.title = element_blank(),
     legend.position = "bottom") +
-  scale_fill_discrete(guide = guide_legend(nrow = 5)) +
-  ggtitle("Averaged scores [0,1], total (incl. absences)") +
+  scale_fill_discrete(guide = guide_legend(nrow = 4)) +
   labs(fill = "Member", color = "Member")
 ```
 
@@ -248,11 +286,11 @@ membersQ2 <- allScores %>% filter(total > scoreRange[1] & total <= scoreRange[2]
 membersQ3 <- allScores %>% filter(total > scoreRange[2])
 ```
 
-The score-ranges are `x` <= `r scoreRange[1]`, `r scoreRange[1]` < `x` <= `r scoreRange[2]`, and `x` > `r scoreRange[2]`.
+The score-ranges are $0\leq x\leq$ `r round(scoreRange[1], 2)`, `r round(scoreRange[1], 2)` $<x\leq$ `r round(scoreRange[2], 2)`, and  `r round(scoreRange[2], 2)` $<x\leq1$.
 
-The `r nrow(membersQ1)` member(s) that should receive a grade __worse__ than their group are: `r paste(membersQ1$Member, collapse = ", ")`.
+The `r nrow(membersQ1)` member(s) that should receive a grade __worse__ than their group are: `r paste(paste0(membersQ1$Member, " (", round(membersQ1$total, 2), ")"), collapse = ", ")`.
 
-The `r nrow(membersQ2)` member(s) that should receive a grade __equal to__ their group are: `r paste(membersQ2$Member, collapse = ", ")`.
+The `r nrow(membersQ2)` member(s) that should receive a grade __equal to__ their group are: `r paste(paste0(membersQ2$Member, " (", round(membersQ2$total, 2), ")"), collapse = ", ")`.
 
-The `r nrow(membersQ3)` member(s) that should receive a grade __better__ than their group are: `r paste(membersQ3$Member, collapse = ", ")`.
+The `r nrow(membersQ3)` member(s) that should receive a grade __better__ than their group are: `r paste(paste0(membersQ3$Member, " (", round(membersQ3$total, 2), ")"), collapse = ", ")`.
 
