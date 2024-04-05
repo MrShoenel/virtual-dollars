@@ -39,6 +39,12 @@ try {
     report.records.forEach(rc => {
         logger.logDebug(rc);
     });
+    logger.logInfo(`-----------`);
+    logger.logInfo(`The total amount of dollars spent was: ${
+        report.records.map(rc => rc.amount).reduce((prev, curr, idx) => prev + curr, 0)}`);
+    logger.logInfo(`The total amount of scrums/other missed was: ${
+        report.records.map(rc => rc.scrumsMissed).reduce((prev, curr, idx) => prev + curr, 0)} / ${
+        report.records.map(rc => rc.otherMissed).reduce((prev, curr, idx) => prev + curr, 0)}`);
 
     logger.logInfo(`----------`);
     logger.logInfo('The authoritative names are:');
@@ -46,10 +52,10 @@ try {
 
     logger.logInfo(`----------`);
     if (cnm.mappedNames.isEmpty) {
-        logger.logInfo(`<no names were mapped, i.e., only using ${cnm.authoritativeNames.length} authoritative names>`);
+        logger.logDebug(`<no names were mapped, i.e., only using ${cnm.authoritativeNames.length} authoritative names>`);
     } else {
         const inv = nm.mappedNames.invert();
-        logger.logInfo(`The ${inv.size} name-mappings are:`);
+        logger.logDebug(`The ${inv.size} name-mappings are:`);
         for (const entry of inv.entries()) {
             logger.logDebug(`${entry[0].name} -> ${entry[1].join(', ')}`);
         }
